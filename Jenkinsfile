@@ -1,19 +1,23 @@
 pipeline {
     agent any
 
+    environment {
+        GITHUB_TOKEN = credentials('github-token')
+    }
+
     stages {
         stage('Checkout') {
             steps {
-                // Directly clone the public repository
-                git url: 'https://github.com/Dhruvprashar01/devops-project'
+                git url: 'https://github.com/Dhruvprashar01/devops-project', credentialsId: 'github-token'
             }
         }
 
-        stage('Build and Run with Docker Compose') {
+        stage('Build and Run') {
             steps {
                 script {
-                    // Build and run Docker containers using Docker Compose
-                    sh 'docker-compose up -d --build'
+                    // If you want to run npm commands in a Linux environment
+                    sh 'npm install'
+                    sh 'npm run build'
                 }
             }
         }
@@ -21,11 +25,9 @@ pipeline {
 
     post {
         success {
-            // Notify on successful build and deployment
             echo 'Build and deployment succeeded!'
         }
         failure {
-            // Notify on failed build or deployment
             echo 'Build or deployment failed!'
         }
     }
