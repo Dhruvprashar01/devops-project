@@ -12,11 +12,37 @@ pipeline {
             }
         }
 
+        stage('Check Node.js and npm versions') {
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
+
+        stage('Install Node.js and npm') {
+            steps {
+                sh '''
+                curl -sL https://deb.nodesource.com/setup_16.x | bash -
+                apt-get install -y nodejs
+                '''
+            }
+        }
+
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()  // Clean the workspace
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install --verbose'
+            }
+        }
+
         stage('Build and Run') {
             steps {
                 script {
-                    // If you want to run npm commands in a Linux environment
-                    sh 'npm install'
                     sh 'npm run build'
                 }
             }
