@@ -22,7 +22,7 @@ pipeline {
         stage('Install Node.js and npm') {
             steps {
                 sh '''
-                curl -sL https://deb.nodesource.com/setup_16.x | bash -
+                curl -sL https://deb.nodesource.com/setup_18.x | bash -
                 apt-get install -y nodejs
                 '''
             }
@@ -36,25 +36,36 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install --verbose'
+                sh '''
+                npm config set registry https://registry.npmjs.org/
+                npm install --verbose
+                '''
             }
         }
 
-        stage('Build and Run') {
+        stage('Build React App') {
             steps {
-                script {
-                    sh 'npm run build'
-                }
+                sh 'npm run build'
+            }
+        }
+
+        stage('Docker Build and Run') {
+            steps {
+                sh '''
+                docker-compose down || true
+                docker-compose build
+                docker-compose up -d
+                '''
             }
         }
     }
 
     post {
         success {
-            echo 'Build and deployment succeeded!'
+            echo '✅ Build, Docker Compose up, and deployment succeeded!'
         }
         failure {
-            echo 'Build or deployment failed!'
+            echo '❌ Build or deployment failed. Please check the console logs.'
         }
     }
 }
