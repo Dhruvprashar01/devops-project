@@ -2,70 +2,41 @@ pipeline {
     agent any
 
     environment {
-        GITHUB_TOKEN = credentials('github-token')
+        // Reference the GitHub token you stored in Jenkins
+        GITHUB_TOKEN = credentials('github-token') // Use the ID for GitHub token
+        DOCKER_HUB_USERNAME = credentials('docker-hub-username') // Use the ID for Docker Hub username
+        DOCKER_HUB_PASSWORD = credentials('docker-hub-password') // Use the ID for Docker Hub token
     }
 
     stages {
         stage('Checkout') {
             steps {
+                // Checkout code from GitHub using the stored GitHub credentials
                 git url: 'https://github.com/Dhruvprashar01/devops-project', credentialsId: 'github-token'
             }
         }
 
-        stage('Check Node.js and npm versions') {
+        stage('Docker Build & Push') {
             steps {
-                sh 'node -v'
-                sh 'npm -v'
-            }
-        }
-
-        stage('Install Node.js and npm') {
-            steps {
-                sh '''
-                curl -sL https://deb.nodesource.com/setup_18.x | bash -
-                apt-get install -y nodejs
-                '''
-            }
-        }
-
-        stage('Clean Workspace') {
-            steps {
-                deleteDir()  // Clean the workspace
-            }
-        }
-
-        stage('Install Dependencies') {
-            steps {
-                sh '''
-                npm config set registry https://registry.npmjs.org/
-                npm install --verbose
-                '''
-            }
-        }
-
-        stage('Build React App') {
-            steps {
-                sh 'npm run build'
-            }
-        }
-
-        stage('Docker Build and Run') {
-            steps {
-                sh '''
-                docker-compose down || true
-                docker-compose build
-                docker-compose up -d
-                '''
+                script {
+                    def imageTag = "${DOCKER_HUB_USERNAME}/devops-project:latest"
+                    // Build Docker image
+                    sh "docker build -t ${imageTag} ."
+                    // Docker login using Docker Hub credentials
+                    sh "docker login -u ${DOCKER_HUB_USERNAME} -p ${DOCKER_HUB_PASSWORD}"
+                    // Push the Docker image to Docker Hub
+                    sh "docker push ${imageTag}"
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Build, Docker Compose up, and deployment succeeded!'
+            echo '✅ Build and Docker push successful!'
         }
         failure {
-            echo '❌ Build or deployment failed. Please check the console logs.'
+            echo '❌ Something went wrong during the build or Docker push.'
         }
     }
 }
