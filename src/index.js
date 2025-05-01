@@ -17,9 +17,6 @@ root.render(
       <BrowserRouter>
         <OrderProvider>
           <CartProvider>
-  //hello
-  //sup brother
-  //hello
             <Elements stripe={stripePromise}>
               <App />
             </Elements>
