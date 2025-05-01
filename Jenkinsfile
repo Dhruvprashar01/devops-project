@@ -1,32 +1,40 @@
 pipeline {
     agent any
+    environment {
+        DOCKER_CREDENTIALS = credentials('dockerhub-creds') // Use the ID you gave while saving credentials
+        IMAGE_NAME = "akaza04/devops-app"  // ✅ Change this
+    }
     stages {
         stage('Checkout') {
             steps {
-                // Use SCM to clone your Git repository
                 checkout scm
             }
         }
-        stage('Build') {
+        stage('Docker Build') {
             steps {
-                // Example: Building the project
-                echo "Building the project..."
-                // Your build commands go here
+                script {
+                    sh 'docker build -t $IMAGE_NAME .'
+                }
             }
         }
-        stage('Test') {
+        stage('Login to Docker Hub') {
             steps {
-                // Example: Running tests
-                echo "Running tests..."
-                // Your test commands go here
+                script {
+                    sh "echo ${DOCKER_CREDENTIALS_PSW} | docker login -u ${DOCKER_CREDENTIALS_USR} --password-stdin"
+                }
             }
         }
-        stage('Deploy') {
+        stage('Push to Docker Hub') {
             steps {
-                // Example: Deploying the project
-                echo "Deploying the project..."
-                // Your deploy commands go here
+                script {
+                    sh "docker push $IMAGE_NAME"
+                }
             }
+        }
+    }
+    post {
+        always {
+            cleanWs()
         }
     }
 }
