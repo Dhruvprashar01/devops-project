@@ -19,6 +19,7 @@ root.render(
           <CartProvider>
   //hello
   //sup brother
+  //hello
             <Elements stripe={stripePromise}>
               <App />
             </Elements>
